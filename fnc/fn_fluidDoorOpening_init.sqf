@@ -8,9 +8,7 @@ if (!isDedicated) then {
 			"_isAdjust", 
 			"_isNext", 
 			"_isPrev",
-			"_unit",
 			"_cursorTarget",
-			"_weapon", 
 			"_cameraPosition", 
 			"_cameraVector", 
 			"_cameraPositionTrue", 
@@ -34,21 +32,19 @@ if (!isDedicated) then {
 				(_isAdjust && {_isNext or {_isPrev}});
 			};
 
-			_unit = player;
 			_cursorTarget = cursorTarget;
 
 			// No point in doing anything if the player isn't pointing at anything
 			if(!isNull _cursorTarget) then {
 
-				_weapon = currentWeapon _unit; // We need this to pick the correct vector due to silly vector behaviors
-				_cameraPosition = eyePos _unit; // Starting point for the intersect line
-				_cameraVector = if(_weapon != "" && {!freeLook}) then {_unit weaponDirection (currentWeapon _unit)} else {eyeDirection _unit}; // Pick the vector we need
+				_cameraVector = [positionCameraToWorld [0,0,0], positionCameraToWorld [0,0,1]] call BIS_fnc_vectorFromXtoY; // Get the current camera vector
+				_cameraPosition = eyePos player; // Starting point for the intersect line
 				_cameraPositionTrue = if(surfaceIsWater _cameraPosition) then {_cameraPosition} else {ASLtoATL _cameraPosition}; // Normalize the starting position
-				_finalPosition = [_cameraPosition, [_cameraVector call BIS_fnc_unitVector, _distance] call BIS_fnc_vectorMultiply] call BIS_fnc_vectorAdd; // Calculate the end position for the intersect line
+				_finalPosition = [_cameraPosition, [_cameraVector call BIS_fnc_unitVector, _distance] call BIS_fnc_vectorMultiply] call BIS_fnc_vectorAdd; // Calculate the end position for the intersect line based on the camera vector
 				_finalPositionTrue = if(surfaceIsWater _finalPosition) then {_finalPosition} else {ASLtoATL _finalPosition}; // Normalize the final position of the intersect line
-				_intersects = [_cursorTarget, "FIRE"] intersect [_cameraPositionTrue, _finalPositionTrue]; // Get the stuff the line intersects
+				_intersects = [_cursorTarget, "GEOM"] intersect [_cameraPositionTrue, _finalPositionTrue]; // Get the stuff the line intersects
 
-				// If we've got something in our net, let's open it
+				// If we've got something in our way, let's try to open it
 				if(count _intersects > 0) then {
 
 					// Currently most interesting doors and hatches are named door_#_rot or hatch_#_rot, those that aren't can rot in hell
